@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, Dimensions, RefreshControl } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { View, FlatList, StyleSheet,  RefreshControl } from 'react-native';
 import { diaryAPI } from '@/utils/api';
 import PostCard from '@/components/PostCard';
 import WeeklyCalendar from '@/components/WeeklyCalendar';
 import { ThemedText } from '@/components/ThemedText';
 import {SharedPost} from "@/interfaces/interface";
-
-const { width } = Dimensions.get('window');
-const IMAGE_WIDTH = width - 50;
+import { useAuth } from '@/context/auth';
+import { Like } from '@/interfaces/interface';
 
 export default function HomeScreen() {
+  const { userId } = useAuth();
   const [sharedPosts, setSharedPosts] = useState<SharedPost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -47,6 +46,16 @@ export default function HomeScreen() {
     fetchSharedPosts(date);
   };
 
+  const updatePostLikes = (postId: string, newLikes: Like[]) => {
+    setSharedPosts(prevPosts => 
+      prevPosts.map(post => 
+        post._id === postId 
+          ? { ...post, likes: newLikes }
+          : post
+      )
+    );
+  };
+
   useEffect(() => {
     fetchSharedPosts(selectedDate);
   }, []);
@@ -59,7 +68,13 @@ export default function HomeScreen() {
       />
       <FlatList
         data={sharedPosts}
-        renderItem={PostCard}
+        renderItem={({ item }) => (
+          <PostCard 
+            item={item} 
+            userId={userId as string}
+            onLikesUpdate={(newLikes) => updatePostLikes(item._id, newLikes)}
+          />
+        )}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContainer}
         refreshControl={

@@ -1,4 +1,4 @@
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -6,6 +6,9 @@ import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth';
 import { userAPI } from '@/utils/api';
+import * as ImagePicker from 'expo-image-picker';
+import { API_DOMAIN } from '@/config/api';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -13,6 +16,42 @@ export default function EditProfileScreen() {
   const { userId } = useAuth();
   const [name, setName] = useState(params.name as string);
   const [bio, setBio] = useState(params.bio as string);
+  const [profileImage, setProfileImage] = useState(params.profileImage as string);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('권한 필요', '사진 라이브러리 접근 권한이 필요합니다.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const formData = new FormData();
+      const filename = result.assets[0].uri.split('/').pop();
+      
+      formData.append('image', {
+        uri: result.assets[0].uri,
+        type: 'image/jpeg',
+        name: filename,
+      } as any);
+
+      try {
+        const response = await userAPI.uploadProfileImage(userId as string, formData);
+        setProfileImage(response.data.profileImage);
+      } catch (error) {
+        console.error('프로필 이미지 업로드 실패:', error);
+        Alert.alert('오류', '이미지 업로드에 실패했습니다.');
+      }
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -21,14 +60,16 @@ export default function EditProfileScreen() {
     }
 
     try {
-      const response = await userAPI.updateUser(userId as string, {name, bio});
+      const response = await userAPI.updateUser(userId as string, {
+        name,
+        bio,
+        profileImage
+      });
 
       Alert.alert('성공', '프로필이 업데이트되었습니다.', [
         {
           text: '확인',
-          onPress: () => {
-            router.back();
-          }
+          onPress: () => router.back()
         }
       ]);
     } catch (error) {
@@ -49,6 +90,20 @@ export default function EditProfileScreen() {
       </View>
 
       <View style={styles.form}>
+        <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
+          {profileImage ? (
+            <Image 
+              source={{ uri: API_DOMAIN + '/' + profileImage }} 
+              style={styles.profileImage} 
+            />
+          ) : (
+            <View style={styles.profileImage}>
+              <Ionicons name="person-circle-outline" size={80} color={Colors.light.icon} />
+            </View>
+          )}
+          <ThemedText style={styles.changePhotoText}>프로필 사진 변경</ThemedText>
+        </TouchableOpacity>
+
         <View style={styles.inputGroup}>
           <ThemedText style={styles.label}>이름</ThemedText>
           <TextInput
@@ -115,5 +170,19 @@ const styles = StyleSheet.create({
   bioInput: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  profileImageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  changePhotoText: {
+    color: Colors.light.tint,
+    fontSize: 16,
   },
 }); 

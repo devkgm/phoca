@@ -1,290 +1,229 @@
-import { View, ScrollView, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Modal, Image } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Calendar from '@/components/Calendar';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth';
-import ImageViewer from '@/components/ImageViewer';
 import DiaryEditor from '@/components/DiaryEditor';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { userAPI, imageAPI, diaryAPI } from '@/utils/api';
+import { diaryAPI, userAPI } from '@/utils/api';
+import { UserInfo, FollowUser, Diary } from '@/interfaces/interface';
+import ImageViewer from '@/components/ImageViewer';
+import FollowModal from '@/components/FollowModal';
+import FollowButton from '@/components/FollowButton';
+import { useFollow } from '@/hooks/useFollow';
+import PostCard from '@/components/PostCard';
+import { format } from 'date-fns';
+import DiaryCard from '@/components/DiaryCard';
+import { ko } from 'date-fns/locale';
+import { useNavigation } from 'expo-router';
 import { API_DOMAIN } from '@/config/api';
-import { DayImage, UserInfo} from "@/interfaces/interface";
+import ProfileSection from '@/components/ProfileSection';
 
-export default function MyPageScreen() {
-  const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(Date.now()));
-  const [dayImages, setDayImages] = useState<DayImage[]>([]);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
-  const { userId } = useAuth();
+export default function UserProfileScreen() {
+  const { userId: currentUserId } = useAuth();
+  const { userId, userName } = useLocalSearchParams();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [userInfo, setUserInfo] = useState<UserInfo>({
-    name: '로딩 중...',
+    name: userName as string || '로딩 중...',
     email: '',
     bio: ''
   });
+  const [showImageViewer, setShowImageViewer] = useState(false);
   const scrollViewRef = useRef(null);
   const calendarRef = useRef<View>(null);
   const [refresh, setRefresh] = useState<number>(0);
-// 일별 이미지 가져오기
-const fetchDayImages = async (date: Date|null) => {
-  if (!userId || !date) return;
-  
-  try {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const response = await imageAPI.getImagesByDay(userId, year, month, day);
-    
-    setDayImages(response.data.images);
-  } catch (error) {
-    console.error('일별 이미지 로딩 실패:', error);
-    setDayImages([]); // 에러 발생 시 빈 배열 전달
-  }
-};
-  const fetchUserInfo = async () => {
-    if (!userId) return;
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
+  const [diary, setDiary] = useState<Diary | null>(null);
+  const navigation = useNavigation();
 
+  const { 
+    followers, 
+    following, 
+    isFollowing, 
+    handleFollow 
+  } = useFollow(userId as string, currentUserId);
+
+  const fetchUserInfo = async () => {
     try {
-      const response = await userAPI.getUser(userId);
+      const response = await userAPI.getUser(userId as string);
       setUserInfo(response.data.user);
     } catch (error) {
       console.error('사용자 정보 로딩 실패:', error);
       Alert.alert('오류', '사용자 정보를 불러오는데 실패했습니다.');
     }
   };
+  const fetchDiary = async () => {
+    if (!userId) return;
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserInfo();
-    }, [userId])
-  );
-
-  const handleEditProfile = () => {
-    router.push({
-      pathname: '/user/edit',
-      params: {
-        name: userInfo.name,
-        bio: userInfo.bio
-      }
-    });
-  };
-
-  const scrollToCalendar = () => {
-    if (calendarRef.current && scrollViewRef.current) {
-      calendarRef.current.measureLayout(
-        // @ts-ignore - RN 타입 정의의 한계
-        scrollViewRef.current,
-        (x: number, y: number) => {
-          scrollViewRef.current?.scrollTo({
-            y: y - 20, // 헤더 높이와 여백을 고려한 오프셋
-            animated: true
-          });
-        },
-        () => console.error("측정 실패")
-      );
-    }
-  };
-
-  const handleDeleteImage = async (imageId: string) => {
     try {
-      await imageAPI.deleteImage(imageId);
-      setDayImages(prev => prev.filter(img => img._id !== imageId));
-      setRefresh(prev => prev + 1);
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd', { locale: ko });
+      const response = await diaryAPI.getSharedPostsByUserDate(userId as string, formattedDate);
+      if (response.data.post) {
+        setDiary(response.data.post);
+      } else {
+        setDiary(null);
+      }
     } catch (error) {
-      Alert.alert('오류', '이미지 삭제에 실패했습니다.');
+      console.error('다이어리 로딩 실패:', error);
     }
   };
-
-
-
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<DayImage>) => {
-    return (
-      <View style={[styles.imageSlideContainer, isActive && styles.activeImage]}>
-        <TouchableOpacity 
-          onPress={() => setSelectedImageIndex(dayImages.indexOf(item))}
-          onLongPress={drag}
-        >
-          <Image
-            source={{ uri: API_DOMAIN + '/' + item.path }}
-            style={styles.galleryImage}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleDeleteImage(item._id)}
-        >
-          <Ionicons name="close-circle" size={24} color="red" />
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-
-
   useEffect(() => {
-    fetchDayImages(selectedDate);
+    fetchDiary();
   }, [selectedDate]);
-
-  
+  useEffect(() => {
+    fetchUserInfo();
+  }, [userId]);
+  useEffect(() => {
+    navigation.setOptions({
+      title: userInfo.name
+    });
+  }, [userInfo.name]);
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.editButton}
-          onPress={handleEditProfile}
-        >
-          <Ionicons name="pencil-outline" size={24} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.settingButton}
-          onPress={() => router.push('/user/setting')}
-        >
-          <Ionicons name="settings-outline" size={24} />
-        </TouchableOpacity>
-      </View>
       <ScrollView ref={scrollViewRef}>
-        <View style={styles.profileSection}>
-          <View style={styles.profileImage}>
-            <Ionicons name="person-circle-outline" size={100} color={Colors.light.icon} />
-          </View>
-          <ThemedText style={styles.userName}>
-            {userInfo.name}
-          </ThemedText>
-          <ThemedText style={styles.userEmail}>
-            {userInfo.email}
-          </ThemedText>
-          <ThemedText style={styles.userBio}>
-            {userInfo.bio}
-          </ThemedText>
-        </View>
-
-        <View 
-          ref={calendarRef}
-          style={styles.calendarSection}
-        >
-          <Calendar 
-            onSelectDate={(date: Date) => {
-              setSelectedDate(date);
-              scrollToCalendar();
-            }}
-            refresh={refresh}
+        <View style={styles.topSection}>
+          <ProfileSection
+            userInfo={userInfo}
+            followers={followers.length}
+            following={following.length}
+            onFollowersPress={() => setShowFollowers(true)}
+            onFollowingPress={() => setShowFollowing(true)}
+            followButton={
+              currentUserId !== userId && (
+                <TouchableOpacity 
+                  style={[
+                    styles.followButton,
+                    isFollowing && styles.followingButton
+                  ]}
+                  onPress={handleFollow}
+                >
+                  <ThemedText style={styles.followButtonText}>
+                    {isFollowing ? '언팔로우' : '팔로우'}
+                  </ThemedText>
+                </TouchableOpacity>
+              )
+            }
           />
+
+          <View ref={calendarRef} style={styles.calendarSection}>
+            <Calendar 
+              onSelectDate={setSelectedDate}
+              refresh={refresh}
+            />
+          </View>
         </View>
 
         <View style={styles.diarySection}>
-          <DiaryEditor 
-            onSave={fetchUserInfo}
-            selectedDate={selectedDate}
-            setRefresh={setRefresh}
-          />
+          {diary && <DiaryCard item={diary} userId={userId as string} />}
         </View>
-
-        
       </ScrollView>
 
-      {selectedImageIndex !== -1 && dayImages.length > 0 && (
+      <Modal
+        visible={showImageViewer}
+        transparent={true}
+        onRequestClose={() => setShowImageViewer(false)}
+      >
         <ImageViewer
-          isVisible={selectedImageIndex !== -1}
-          images={dayImages}
-          initialImageIndex={selectedImageIndex}
-          onClose={() => setSelectedImageIndex(-1)}
+          selectedDate={selectedDate}
+          userId={userId as string}
+          onClose={() => setShowImageViewer(false)}
         />
-      )}
+      </Modal>
+
+      <FollowModal
+        visible={showFollowers}
+        onClose={() => setShowFollowers(false)}
+        title="팔로워"
+        userId={userId as string}
+      />
+      <FollowModal
+        visible={showFollowing}
+        onClose={() => setShowFollowing(false)}
+        title="팔로잉"
+        userId={userId as string}
+      />
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
-  header: {
+  topSection: {
     flexDirection: 'row',
-    padding: 15,
-    alignItems: 'center',
-    justifyContent: 'flex-end'
-  },
-  editButton: {
-    padding: 10,
-    marginRight: 10,
-  },
-  settingButton: {
-    padding: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
   profileSection: {
-    padding: 20,
-    alignItems: 'center'
+    width: '35%',
+    alignItems: 'center',
+    marginRight: 10,
   },
   profileImage: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15
+    marginBottom: 10,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 5
+    marginBottom: 10,
   },
-  userEmail: {
-    color: Colors.light.icon,
-    marginBottom: 10
+  followInfo: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    marginVertical: 10,
+  },
+  followItem: {
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  followCount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  followLabel: {
+    fontSize: 12,
+    color: Colors.light.text,
   },
   userBio: {
     textAlign: 'center',
-    marginBottom: 20
+    marginVertical: 10,
   },
   calendarSection: {
-    marginBottom: 0
-  },
-  
-  imageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  imageContainer: {
-    width: '48%',
-    aspectRatio: 1,
-    marginBottom: 10,
-  },
-  galleryImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-  },
-  noImagesText: {
-    textAlign: 'center',
-    color: Colors.light.icon,
-    marginTop: 20,
+    width: '62%',
   },
   diarySection: {
+    padding: 20,
   },
-  imageSlider: {
-    flexGrow: 0,
-    marginTop: 10,
+  followButton: {
+    backgroundColor: Colors.light.tint,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginVertical: 10,
   },
-  imageSlideContainer: {
-    width: 200,
-    height: 200,
-    marginRight: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
+  followingButton: {
+    backgroundColor: '#ccc',
   },
-  activeImage: {
-    opacity: 0.8,
+  followButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
-  removeButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'white',
-    borderRadius: 12,
+  profileImageStyle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-
 });

@@ -7,7 +7,6 @@ import { diaryAPI, imageAPI } from '@/utils/api';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import WeeklyCalendar from '@/components/WeeklyCalendar';
 import { Image } from 'expo-image';
 import { API_DOMAIN } from '@/config/api';
 import ImageViewer from './ImageViewer';
@@ -16,9 +15,11 @@ import { ko } from 'date-fns/locale';
 import {Diary, DayImage} from '@/interfaces/interface';
 
 interface DiaryEditorProps {
-  onSave?: () => void;
   selectedDate: Date;
-  setRefresh: (value: (prev: number) => number) => void;
+  onSave?: () => void;
+  setRefresh?: (value: number) => void;
+  readOnly?: boolean;
+  userId?: string;
 }
 
 

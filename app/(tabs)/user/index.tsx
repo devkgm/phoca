@@ -1,4 +1,4 @@
-import { View, ScrollView, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, Image, TouchableOpacity, StyleSheet, Alert, Modal } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -10,7 +10,9 @@ import { useAuth } from '@/context/auth';
 import DiaryEditor from '@/components/DiaryEditor';
 import { userAPI } from '@/utils/api';
 import { UserInfo } from '@/interfaces/interface'
-
+import FollowModal from '@/components/FollowModal';
+import { API_DOMAIN } from '@/config/api';
+import ProfileSection from '@/components/ProfileSection';
 
 export default function MyPageScreen() {
   const router = useRouter();
@@ -24,6 +26,10 @@ export default function MyPageScreen() {
   const scrollViewRef = useRef(null);
   const calendarRef = useRef<View>(null);
   const [refresh, setRefresh] = useState<number>(0);
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
   const fetchUserInfo = async () => {
     if (!userId) return;
@@ -37,9 +43,25 @@ export default function MyPageScreen() {
     }
   };
 
+  const fetchFollowInfo = async () => {
+    if (!userId) return;
+
+    try {
+      const [followersRes, followingRes] = await Promise.all([
+        userAPI.getFollowers(userId),
+        userAPI.getFollowing(userId)
+      ]);
+      setFollowers(followersRes.data.followers);
+      setFollowing(followingRes.data.following);
+    } catch (error) {
+      console.error('팔로우 정보 로딩 실패:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchUserInfo();
+      fetchFollowInfo();
     }, [userId])
   );
 
@@ -48,25 +70,10 @@ export default function MyPageScreen() {
       pathname: '/user/edit',
       params: {
         name: userInfo.name,
-        bio: userInfo.bio
+        bio: userInfo.bio,
+        profileImage: userInfo.profileImage
       }
     });
-  };
-
-  const scrollToCalendar = () => {
-    if (calendarRef.current && scrollViewRef.current) {
-      calendarRef.current.measureLayout(
-        // @ts-ignore - RN 타입 정의의 한계
-        scrollViewRef.current,
-        (x: number, y: number) => {
-          scrollViewRef.current?.scrollTo({
-            y: y - 20, // 헤더 높이와 여백을 고려한 오프셋
-            animated: true
-          });
-        },
-        () => console.error("측정 실패")
-      );
-    }
   };
 
   return (
@@ -93,14 +100,13 @@ export default function MyPageScreen() {
 
       <ScrollView ref={scrollViewRef}>
         <View style={styles.topSection}>
-          <View style={styles.profileSection}>
-            <View style={styles.profileImage}>
-              <Ionicons name="person-circle-outline" size={80} color={Colors.light.icon} />
-            </View>
-            <ThemedText style={styles.userBio}>
-              {userInfo.bio}
-            </ThemedText>
-          </View>
+          <ProfileSection
+            userInfo={userInfo}
+            followers={followers.length}
+            following={following.length}
+            onFollowersPress={() => setShowFollowers(true)}
+            onFollowingPress={() => setShowFollowing(true)}
+          />
 
           <View ref={calendarRef} style={styles.calendarSection}>
             <Calendar 
@@ -121,7 +127,18 @@ export default function MyPageScreen() {
         </View>
       </ScrollView>
 
-      
+      <FollowModal
+        visible={showFollowers}
+        onClose={() => setShowFollowers(false)}
+        title="팔로워"
+        userId={userId as string}
+      />
+      <FollowModal
+        visible={showFollowing}
+        onClose={() => setShowFollowing(false)}
+        title="팔로잉"
+        userId={userId as string}
+      />
     </ThemedView>
   );
 }
@@ -186,5 +203,73 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     marginTop: 10,
   },
- 
+  followInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 10,
+  },
+  followItem: {
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  followCount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  followLabel: {
+    fontSize: 12,
+    color: Colors.light.text,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.light.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingVertical: 20,
+    height: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  userList: {
+    paddingHorizontal: 20,
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  userInfo: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  userBio: {
+    fontSize: 14,
+    color: Colors.light.text,
+    marginTop: 2,
+  },
+  profileImageStyle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
 });

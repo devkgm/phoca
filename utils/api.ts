@@ -12,6 +12,20 @@ const api = axios.create({
 export const userAPI = {
     getUser: (userId: string) => api.get(API_URL.GET_USER(userId)),
     updateUser: (userId: string, data: any) => api.put(API_URL.UPDATE_USER(userId), data),
+    followUser: (userId: string, followerId: string) => 
+        api.post(API_URL.FOLLOW_USER(userId), { followerId }),
+    unfollowUser: (userId: string, followerId: string) => 
+        api.post(API_URL.UNFOLLOW_USER(userId), { followerId }),
+    getFollowers: (userId: string) => 
+        api.get(API_URL.GET_FOLLOWERS(userId)),
+    getFollowing: (userId: string) => 
+        api.get(API_URL.GET_FOLLOWING(userId)),
+    uploadProfileImage: (userId: string, formData: FormData) => 
+        api.post(API_URL.UPLOAD_PROFILE_IMAGE(userId), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }),
 };
 
 export const diaryAPI = {
@@ -19,6 +33,8 @@ export const diaryAPI = {
     saveDiary: (data: any) => api.post(API_URL.SAVE_DIARY, data),
     shareDiary: (data: any) => api.post(API_URL.SHARE_DIARY, data),
     getSharedPosts: () => api.get(API_URL.GET_SHARED_POSTS),
+    getSharedPostsByUserDate: (userId: string, date: string) => 
+        api.get(API_URL.GET_SHARED_POSTS_BY_USER_DATE(userId, date)),
     getDiaryImagesStatus: (userId: string, year: number, month: number) => 
         api.get(API_URL.GET_DIARY_IMAGES_STATUS(userId, year, month)),
 };
@@ -39,4 +55,15 @@ export const imageAPI = {
 export const authAPI = {
     login: (data: any) => api.post(API_URL.LOGIN, data),
     signup: (data: any) => api.post(API_URL.SIGNUP, data),
+};
+
+export const socialAPI = {
+    toggleLike: (diaryId: string, userId: string) => 
+        api.post(API_URL.TOGGLE_LIKE(diaryId), { userId }),
+    addComment: (diaryId: string, userId: string, content: string) => 
+        api.post(API_URL.ADD_COMMENT(diaryId), { userId, content }),
+    deleteComment: (commentId: string) => 
+        api.delete(API_URL.DELETE_COMMENT(commentId)),
+    getSocialInfo: (diaryId: string) => 
+        api.get(API_URL.GET_SOCIAL_INFO(diaryId)),
 }; 
