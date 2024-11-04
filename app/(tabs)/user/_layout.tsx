@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { Stack } from "expo-router";
 
 export default function UserLayout() {
@@ -16,6 +17,14 @@ export default function UserLayout() {
                     headerShadowVisible: false
                 }} 
             />
+            <Stack.Screen
+                name="profile"
+                options={{
+                headerBackTitle: '뒤로',
+                headerTintColor: Colors.light.tint,
+                }}
+            />
         </Stack>
+        
     );
 }

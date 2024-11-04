@@ -1,4 +1,4 @@
-import { View, Modal, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,13 @@ import { useState, useEffect } from 'react';
 import { userAPI } from '@/utils/api';
 import { FollowUser } from '@/interfaces/interface';
 import { useRouter } from 'expo-router';
-import { API_DOMAIN } from '@/config/api';
+import UserProfileLink from '@/components/UserProfileLink';
+import  { 
+  useSharedValue,
+  withTiming,
+  Easing
+} from 'react-native-reanimated';
+import BottomSheetModal from './BottomSheetModal';
 
 interface FollowModalProps {
   visible: boolean;
@@ -17,13 +23,36 @@ interface FollowModalProps {
 
 export default function FollowModal({ visible, onClose, title, userId }: FollowModalProps) {
   const [users, setUsers] = useState<FollowUser[]>([]);
-  const router = useRouter();
+  const translateY = useSharedValue(1000);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
+      translateY.value = withTiming(0, {
+        duration: 250,
+        easing: Easing.ease
+      });
+      backdropOpacity.value = withTiming(1, { 
+        duration: 250 
+      });
       fetchUsers();
     }
-  }, [visible, userId]);
+  }, [visible]);
+
+  const handleClose = () => {
+    translateY.value = withTiming(1000, {
+      duration: 200,
+      easing: Easing.ease
+    });
+    backdropOpacity.value = withTiming(0, { 
+      duration: 200 
+    });
+    setTimeout(onClose, 200);
+  };
+
+  const handleProfilePress = () => {
+    handleClose();
+  };
 
   const fetchUsers = async () => {
     try {
@@ -37,82 +66,42 @@ export default function FollowModal({ visible, onClose, title, userId }: FollowM
     }
   };
 
-  const handleUserPress = (userId: string) => {
-    onClose();
-    router.push(`/home/profile?userId=${userId}`);
-  };
+  if (!visible) return null;
 
   return (
-    <Modal
+    <BottomSheetModal
       visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      handleClose={handleClose}
+      title={title}
+      height="70%"
+      translateY={translateY}
+      backdropOpacity={backdropOpacity}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <ThemedText style={styles.modalTitle}>{title}</ThemedText>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} />
-            </TouchableOpacity>
+      <ScrollView style={styles.userList}>
+        {users.map((user) => (
+          <View key={user._id} style={styles.userItem}>
+            <View style={styles.userContent}>
+              <UserProfileLink
+                userId={user._id}
+                name={user.name}
+                profileImage={user.profileImage}
+                routePath="/(tabs)/home/profile"
+                size="medium"
+                onPress={handleProfilePress}
+              />
+              <ThemedText style={styles.userBio}>{user.bio}</ThemedText>
+            </View>
           </View>
-          <ScrollView style={styles.userList}>
-            {users.map((user) => (
-              <TouchableOpacity 
-                key={user._id} 
-                style={styles.userItem}
-                onPress={() => handleUserPress(user._id)}
-              >
-                {user.profileImage ? (
-                  <Image 
-                    source={{ uri: API_DOMAIN + '/' + user.profileImage }}
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <View style={styles.profileImage}>
-                    <Ionicons name="person-circle-outline" size={40} color={Colors.light.icon} />
-                  </View>
-                )}
-                <View style={styles.userInfo}>
-                  <ThemedText style={styles.userName}>{user.name}</ThemedText>
-                  <ThemedText style={styles.userBio}>{user.bio}</ThemedText>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+        ))}
+      </ScrollView>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: Colors.light.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingVertical: 20,
-    height: '70%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   userList: {
-    paddingHorizontal: 20,
+    padding: 15,
   },
   userItem: {
     flexDirection: 'row',
@@ -121,24 +110,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userInfo: {
+  userContent: {
     flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '500',
   },
   userBio: {
     fontSize: 14,
     color: Colors.light.text,
-    marginTop: 2,
+    marginTop: 4,
+    marginLeft: 46,
   },
 }); 

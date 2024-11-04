@@ -2,11 +2,13 @@ import { API_DOMAIN } from "@/config/api";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import { Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { DayImage, SharedPost, Like } from "@/interfaces/interface";
+import { DayImage, SharedPost, Like, Comment } from "@/interfaces/interface";
 import { useAuth } from "@/context/auth";
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { socialAPI } from '@/utils/api';
+import CommentModal from '@/components/CommentModal';
+import UserProfileLink from '@/components/UserProfileLink';
 
 const { width } = Dimensions.get('window');
 const IMAGE_WIDTH = width - 50;
@@ -15,11 +17,13 @@ interface PostCardProps {
   item: SharedPost;
   userId: string;
   onLikesUpdate: (newLikes: Like[]) => void;
+  onCommentsUpdate: (newComments: Comment[]) => void;
 }
 
-export default function PostCard({ item, userId, onLikesUpdate }: PostCardProps) {
+export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const { userId: currentUserId } = useAuth();
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
     setIsLiked(item.likes.some(like => like.userId._id === currentUserId));
@@ -53,28 +57,23 @@ export default function PostCard({ item, userId, onLikesUpdate }: PostCardProps)
     />
   );
 
+  const handleCommentsUpdate = (newComments: Comment[]) => {
+    onCommentsUpdate(newComments);
+  };
+
   return (
     <View style={styles.card}>
-      <TouchableOpacity onPress={navigateToProfile}>
-        <View style={styles.cardHeader}>
-          <View style={styles.userInfo}>
-            {item.profileImage ? (
-              <Image 
-                source={{ uri: API_DOMAIN + '/' + item.profileImage }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.profileImage}>
-                <Ionicons name="person-circle-outline" size={30} color={Colors.light.icon} />
-              </View>
-            )}
-            <Text style={styles.userName}>{item.userName}</Text>
-          </View>
-          <Text style={styles.date}>
-            {new Date(item.date).getFullYear()}년 {new Date(item.date).getMonth() + 1}월 {new Date(item.date).getDate()}일
-          </Text>
-        </View>
-      </TouchableOpacity>
+      <View style={styles.cardHeader}>
+        <UserProfileLink
+          userId={item.userId}
+          name={item.userName}
+          profileImage={item.profileImage}
+          size="small"
+        />
+        <Text style={styles.date}>
+          {new Date(item.date).getFullYear()}년 {new Date(item.date).getMonth() + 1}월 {new Date(item.date).getDate()}일
+        </Text>
+      </View>
 
       {item.images.length > 0 && (
         <View style={styles.imageContainer}>
@@ -99,11 +98,23 @@ export default function PostCard({ item, userId, onLikesUpdate }: PostCardProps)
           />
           <Text style={styles.socialCount}>{item.likes.length}</Text>
         </TouchableOpacity>
-        <View style={styles.socialButton}>
+        <TouchableOpacity 
+          style={styles.socialButton} 
+          onPress={() => setShowComments(true)}
+        >
           <Ionicons name="chatbubble-outline" size={24} color={Colors.light.text} />
           <Text style={styles.socialCount}>{item.comments.length}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
+
+      <CommentModal
+        visible={showComments}
+        onClose={() => setShowComments(false)}
+        diaryId={item._id}
+        userId={userId}
+        comments={item.comments}
+        onCommentsUpdate={handleCommentsUpdate}
+      />
     </View>
   );
 }    
@@ -118,29 +129,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,
+    elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   date: {
     fontSize: 14,

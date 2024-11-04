@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import {SharedPost} from "@/interfaces/interface";
 import { useAuth } from '@/context/auth';
 import { Like } from '@/interfaces/interface';
+import { Comment } from '@/interfaces/interface';
 
 export default function HomeScreen() {
   const { userId } = useAuth();
@@ -56,6 +57,16 @@ export default function HomeScreen() {
     );
   };
 
+  const updatePostComments = (postId: string, newComments: Comment[]) => {
+    setSharedPosts(prevPosts => 
+      prevPosts.map(post => 
+        post._id === postId 
+          ? { ...post, comments: newComments }
+          : post
+      )
+    );
+  };
+
   useEffect(() => {
     fetchSharedPosts(selectedDate);
   }, []);
@@ -73,6 +84,7 @@ export default function HomeScreen() {
             item={item} 
             userId={userId as string}
             onLikesUpdate={(newLikes) => updatePostLikes(item._id, newLikes)}
+            onCommentsUpdate={(newComments) => updatePostComments(item._id, newComments)}
           />
         )}
         keyExtractor={(item) => item._id}
