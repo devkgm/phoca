@@ -1,0 +1,5 @@
+
+# 모든 파일에 적용되는 기본 설정
+[*]
+indent_style = space      # space 또는 tab 설정
+indent_size = 4           # 탭 간격 설정, 숫자를 원하는 값으로 변경 가능
