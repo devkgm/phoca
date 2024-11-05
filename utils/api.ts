@@ -54,7 +54,12 @@ export const imageAPI = {
 
 export const authAPI = {
     login: (data: any) => api.post(API_URL.LOGIN, data),
-    signup: (data: any) => api.post(API_URL.SIGNUP, data),
+    signup: (formData: FormData) => 
+        api.post(API_URL.SIGNUP, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }),
 };
 
 export const socialAPI = {

@@ -1,9 +1,9 @@
-import { Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/auth";
 import { authAPI } from "@/utils/api";
 import axios from 'axios';
@@ -13,6 +13,9 @@ export default function LoginScreen() {
     const { login } = useAuth();
     const [email, setEmail] = useState("jip0806@naver.com");
     const [password, setPassword] = useState("123456");
+    
+    const passwordRef = useRef<TextInput>(null);
+
     useEffect(()=> {
     // router.replace("/home")
     })
@@ -45,86 +48,104 @@ export default function LoginScreen() {
     };
 
     return (
-        <ThemedView
-            style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 20,
-            }}
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
         >
-            <ThemedText style={{ fontSize: 24, marginBottom: 30 }}>로그인</ThemedText>
-            
-            <TextInput 
-                style={{
-                    width: "100%",
-                    height: 50,
-                    borderWidth: 1,
-                    borderColor: Colors.light.icon,
-                    borderRadius: 8,
-                    padding: 10,
-                    marginBottom: 15,
-                }}
-                placeholder="이메일"
-                placeholderTextColor={Colors.light.icon}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-            />
-            
-            <TextInput
-                style={{
-                    width: "100%", 
-                    height: 50,
-                    borderWidth: 1,
-                    borderColor: Colors.light.icon,
-                    borderRadius: 8,
-                    padding: 10,
-                    marginBottom: 30,
-                }}
-                placeholder="비밀번호"
-                placeholderTextColor={Colors.light.icon}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
+            <ScrollView contentContainerStyle={styles.container}>
+                <ThemedText style={styles.title}>로그인</ThemedText>
+                
+                <TextInput 
+                    style={styles.input}
+                    placeholder="이메일"
+                    placeholderTextColor={Colors.light.icon}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    onSubmitEditing={() => passwordRef.current?.focus()}
+                    blurOnSubmit={false}
+                />
+                
+                <TextInput
+                    ref={passwordRef}
+                    style={styles.input}
+                    placeholder="비밀번호"
+                    placeholderTextColor={Colors.light.icon}
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
+                />
 
-            <TouchableOpacity
-                onPress={handleLogin}
-                style={{
-                    width: "100%",
-                    height: 50,
-                    backgroundColor: Colors.light.tint,
-                    borderRadius: 8,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginBottom: 15,
-                }}
-            >
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                    로그인
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={handleLogin}
+                    style={styles.loginButton}
+                >
+                    <Text style={styles.buttonText}>로그인</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                onPress={() => router.push("/signup")}
-                style={{
-                    width: "100%",
-                    height: 50,
-                    backgroundColor: "transparent",
-                    borderRadius: 8,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderWidth: 1,
-                    borderColor: Colors.light.tint,
-                }}
-            >
-                <Text style={{ color: Colors.light.tint, fontSize: 16, fontWeight: "bold" }}>
-                    회원가입
-                </Text>
-            </TouchableOpacity>
-        </ThemedView>
+                <TouchableOpacity
+                    onPress={() => router.push("/signup")}
+                    style={styles.signupButton}
+                >
+                    <Text style={styles.signupButtonText}>회원가입</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexGrow: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    title: {
+        fontSize: 24,
+        marginBottom: 30,
+    },
+    input: {
+        width: "100%",
+        height: 50,
+        borderWidth: 1,
+        borderColor: Colors.light.icon,
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 15,
+    },
+    loginButton: {
+        width: "100%",
+        height: 50,
+        backgroundColor: Colors.light.tint,
+        borderRadius: 8,
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 15,
+    },
+    signupButton: {
+        width: "100%",
+        height: 50,
+        backgroundColor: "transparent",
+        borderRadius: 8,
+        justifyContent: "center",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: Colors.light.tint,
+    },
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    signupButtonText: {
+        color: Colors.light.tint,
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+});

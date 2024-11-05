@@ -68,11 +68,9 @@ export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate
           userId={item.userId}
           name={item.userName}
           profileImage={item.profileImage}
+          routePath="/(tabs)/home/profile"
           size="small"
         />
-        <Text style={styles.date}>
-          {new Date(item.date).getFullYear()}년 {new Date(item.date).getMonth() + 1}월 {new Date(item.date).getDate()}일
-        </Text>
       </View>
 
       {item.images.length > 0 && (

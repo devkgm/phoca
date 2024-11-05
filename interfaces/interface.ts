@@ -10,6 +10,7 @@ export interface Diary {
     content: string;
     images: Array<DayImage>;
     date: string;
+    createdAt: string;
     likes: Like[];
     comments: Comment[];
 }
