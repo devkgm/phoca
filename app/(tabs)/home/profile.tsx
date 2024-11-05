@@ -45,7 +45,7 @@ export default function UserProfileScreen() {
     following, 
     isFollowing, 
     handleFollow 
-  } = useFollow(userId as string, currentUserId);
+  } = useFollow(currentUserId, userId as string);
 
   const fetchUserInfo = async () => {
     try {
@@ -100,7 +100,7 @@ export default function UserProfileScreen() {
                     styles.followButton,
                     isFollowing && styles.followingButton
                   ]}
-                  onPress={handleFollow}
+                  onPress={() => handleFollow()}
                 >
                   <ThemedText style={styles.followButtonText}>
                     {isFollowing ? '언팔로우' : '팔로우'}

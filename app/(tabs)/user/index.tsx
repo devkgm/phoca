@@ -76,6 +76,10 @@ export default function MyPageScreen() {
     });
   };
 
+  const handleFollowUpdate = () => {
+    fetchFollowInfo();
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
@@ -132,12 +136,14 @@ export default function MyPageScreen() {
         onClose={() => setShowFollowers(false)}
         title="팔로워"
         userId={userId as string}
+        onFollowUpdate={handleFollowUpdate}
       />
       <FollowModal
         visible={showFollowing}
         onClose={() => setShowFollowing(false)}
         title="팔로잉"
         userId={userId as string}
+        onFollowUpdate={handleFollowUpdate}
       />
     </ThemedView>
   );

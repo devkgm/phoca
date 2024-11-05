@@ -1,30 +1,31 @@
-import { View, TouchableOpacity, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
-import { userAPI } from '@/utils/api';
 import { FollowUser } from '@/interfaces/interface';
-import { useRouter } from 'expo-router';
 import UserProfileLink from '@/components/UserProfileLink';
-import  { 
-  useSharedValue,
-  withTiming,
-  Easing
-} from 'react-native-reanimated';
+import { useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import BottomSheetModal from './BottomSheetModal';
+import { useFollow } from '@/hooks/useFollow';
+import { useAuth } from '@/context/auth';
 
 interface FollowModalProps {
   visible: boolean;
   onClose: () => void;
   title: '팔로워' | '팔로잉';
   userId: string;
+  onFollowUpdate?: () => void;
 }
 
-export default function FollowModal({ visible, onClose, title, userId }: FollowModalProps) {
-  const [users, setUsers] = useState<FollowUser[]>([]);
+export default function FollowModal({ visible, onClose, title, userId, onFollowUpdate }: FollowModalProps) {
+  if (!visible) return null;
+
   const translateY = useSharedValue(1000);
   const backdropOpacity = useSharedValue(0);
+  const { userId: currentUserId } = useAuth();
+  
+  const { following: myFollowing, handleFollow } = useFollow(currentUserId);
+  const { followers: ownerFollowers, following: ownerFollowing } = useFollow(userId);
 
   useEffect(() => {
     if (visible) {
@@ -35,7 +36,14 @@ export default function FollowModal({ visible, onClose, title, userId }: FollowM
       backdropOpacity.value = withTiming(1, { 
         duration: 250 
       });
-      fetchUsers();
+    } else {
+      translateY.value = withTiming(1000, {
+        duration: 200,
+        easing: Easing.ease
+      });
+      backdropOpacity.value = withTiming(0, { 
+        duration: 200 
+      });
     }
   }, [visible]);
 
@@ -54,19 +62,16 @@ export default function FollowModal({ visible, onClose, title, userId }: FollowM
     handleClose();
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await (title === '팔로워' 
-        ? userAPI.getFollowers(userId)
-        : userAPI.getFollowing(userId)
-      );
-      setUsers(title === '팔로워' ? response.data.followers : response.data.following);
-    } catch (error) {
-      console.error('팔로우 정보 로딩 실패:', error);
-    }
+  const toggleFollow = async (targetUserId: string) => {
+    await handleFollow(targetUserId);
+    if (onFollowUpdate) onFollowUpdate();
   };
 
-  if (!visible) return null;
+  const isUserFollowing = (targetUserId: string) => {
+    return myFollowing.some(user => user._id === targetUserId);
+  };
+
+  const displayUsers = title === '팔로워' ? ownerFollowers : ownerFollowing;
 
   return (
     <BottomSheetModal
@@ -79,7 +84,7 @@ export default function FollowModal({ visible, onClose, title, userId }: FollowM
       backdropOpacity={backdropOpacity}
     >
       <ScrollView style={styles.userList}>
-        {users.map((user) => (
+        {displayUsers.map((user) => (
           <View key={user._id} style={styles.userItem}>
             <View style={styles.userContent}>
               <UserProfileLink
@@ -92,6 +97,19 @@ export default function FollowModal({ visible, onClose, title, userId }: FollowM
               />
               <ThemedText style={styles.userBio}>{user.bio}</ThemedText>
             </View>
+            {user._id !== currentUserId && (
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  { backgroundColor: isUserFollowing(user._id) ? "#FF4500" : Colors.light.tint }
+                ]}
+                onPress={() => toggleFollow(user._id)}
+              >
+                <ThemedText style={styles.followButtonText}>
+                  {isUserFollowing(user._id) ? '언팔로우' : '맞팔로우'}
+                </ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </ScrollView>
@@ -119,4 +137,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginLeft: 46,
   },
-}); 
+  followButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    width: 80,
+    alignItems: 'center',
+  },
+  followButtonText: {
+    color: 'white',
+    fontSize: 14,
+  },
+});
