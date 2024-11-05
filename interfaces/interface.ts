@@ -1,6 +1,8 @@
 export interface DayImage {
     _id: string;
     path: string;
+    width: number;
+    height: number;
     createdAt: string;
     date: string;
 }

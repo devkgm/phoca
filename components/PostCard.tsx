@@ -11,7 +11,8 @@ import CommentModal from '@/components/CommentModal';
 import UserProfileLink from '@/components/UserProfileLink';
 
 const { width } = Dimensions.get('window');
-const IMAGE_WIDTH = width - 50;
+const IMAGE_GAP = 10;
+const IMAGE_HEIGHT = width * 0.6;
 
 interface PostCardProps {
   item: SharedPost;
@@ -29,6 +30,16 @@ export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate
     setIsLiked(item.likes.some(like => like.userId._id === currentUserId));
   }, [item.likes, currentUserId]);
 
+  const renderImage = ({ item: image }: { item: DayImage }) => (
+    <Image
+      source={{ uri: API_DOMAIN + "/" + image.path }}
+      style={[
+        styles.slideImage,
+        { height: IMAGE_HEIGHT, width: (IMAGE_HEIGHT / image.height) * image.width, borderRadius: 10 }
+      ]}
+      resizeMode="contain"
+    />
+  );
   const handleLike = async () => {
     try {
       const response = await socialAPI.toggleLike(item._id, currentUserId as string);
@@ -49,14 +60,6 @@ export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate
     });
   };
 
-  const renderImage = ({ item }: { item: DayImage }) => (
-    <Image
-      source={{ uri: API_DOMAIN + "/" + item.path }}
-      style={styles.slideImage}
-      resizeMode="cover"
-    />
-  );
-
   const handleCommentsUpdate = (newComments: Comment[]) => {
     onCommentsUpdate(newComments);
   };
@@ -74,14 +77,15 @@ export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate
       </View>
 
       {item.images.length > 0 && (
-        <View style={styles.imageContainer}>
+        <View style={styles.carouselContainer}>
           <FlatList
             data={item.images}
             renderItem={renderImage}
             horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={true}
+            showsHorizontalScrollIndicator={false}
             keyExtractor={(image) => image._id}
+            decelerationRate="normal"
+            contentContainerStyle={styles.imageList}
           />
         </View>
       )}
@@ -116,7 +120,6 @@ export default function PostCard({ item, userId, onLikesUpdate, onCommentsUpdate
     </View>
   );
 }    
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
@@ -139,14 +142,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.icon,
   },
-  imageContainer: {
-    height: 200,
+  carouselContainer: {
     marginBottom: 15,
   },
+  imageList: {
+    gap: IMAGE_GAP,
+  },
   slideImage: {
-    width: IMAGE_WIDTH,
-    height: 200,
-    borderRadius: 10,
+    backgroundColor: '#f8f8f8',
   },
   content: {
     fontSize: 16,
@@ -168,4 +171,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
   },
-}); 
+});
