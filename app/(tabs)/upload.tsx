@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '@/context/auth';
 import { imageAPI } from '@/utils/api';
+import { useAlert } from '@/context/alert';
 
 interface ImageState {
   uri: string;
@@ -14,11 +15,12 @@ interface ImageState {
   name: string;
 }
 
-export default function UploadScreen() {
+ function UploadScreen() {
   const [images, setImages] = useState<ImageState[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const { userId } = useAuth();
-
+  const { alert } = useAlert();
+  
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -49,7 +51,7 @@ export default function UploadScreen() {
 
   const uploadImages = async () => {
     if (images.length === 0 || !userId) {
-      Alert.alert("오류", "이미지를 선택하거나 다시 로그인해주세요.");
+      alert("오류", "이미지를 선택하거나 다시 로그인해주세요.");
       return;
     }
 
@@ -67,14 +69,14 @@ export default function UploadScreen() {
       
       const response = await imageAPI.uploadImages(formData);
 
-      Alert.alert("성공", "이미지가 업로드되었습니다.");
+      alert("성공", "이미지가 업로드되었습니다.");
       setImages([]);
 
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        Alert.alert("오류", error.response.data.message);
+        alert("오류", error.response.data.message);
       } else {
-        Alert.alert("오류", "이미지 업로드 중 오류가 발생했습니다.");
+        alert("오류", "이미지 업로드 중 오류가 발생했습니다.");
       }
     } finally {
       setIsUploading(false);

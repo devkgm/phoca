@@ -21,6 +21,7 @@ import { ko } from 'date-fns/locale';
 import { useNavigation } from 'expo-router';
 import { API_DOMAIN } from '@/config/api';
 import ProfileSection from '@/components/ProfileSection';
+import { useAlert } from '@/context/alert';
 
 export default function UserProfileScreen() {
   const { userId: currentUserId } = useAuth();
@@ -39,6 +40,7 @@ export default function UserProfileScreen() {
   const [showFollowing, setShowFollowing] = useState(false);
   const [diary, setDiary] = useState<Diary | null>(null);
   const navigation = useNavigation();
+  const { alert } = useAlert();
 
   const { 
     followers, 
@@ -53,7 +55,7 @@ export default function UserProfileScreen() {
       setUserInfo(response.data.user);
     } catch (error) {
       console.error('사용자 정보 로딩 실패:', error);
-      Alert.alert('오류', '사용자 정보를 불러오는데 실패했습니다.');
+      alert('오류', '사용자 정보를 불러오는데 실패했습니다.');
     }
   };
   const fetchDiary = async () => {

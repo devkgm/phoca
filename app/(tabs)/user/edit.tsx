@@ -9,6 +9,7 @@ import { userAPI } from '@/utils/api';
 import * as ImagePicker from 'expo-image-picker';
 import { API_DOMAIN } from '@/config/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useAlert } from '@/context/alert';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -17,12 +18,12 @@ export default function EditProfileScreen() {
   const [name, setName] = useState(params.name as string);
   const [bio, setBio] = useState(params.bio as string);
   const [profileImage, setProfileImage] = useState(params.profileImage as string);
-
+  const { alert } = useAlert();
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('권한 필요', '사진 라이브러리 접근 권한이 필요합니다.');
+      alert('권한 필요', '사진 라이브러리 접근 권한이 필요합니다.');
       return;
     }
 
@@ -48,14 +49,14 @@ export default function EditProfileScreen() {
         setProfileImage(response.data.profileImage);
       } catch (error) {
         console.error('프로필 이미지 업로드 실패:', error);
-        Alert.alert('오류', '이미지 업로드에 실패했습니다.');
-      }
+        alert("오류", "이미지 업로드에 실패했습니다.");
+    }
     }
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('오류', '이름을 입력해주세요.');
+      alert("오류", "이름을 입력해주세요.");
       return;
     }
 
@@ -66,14 +67,14 @@ export default function EditProfileScreen() {
         profileImage
       });
 
-      Alert.alert('성공', '프로필이 업데이트되었습니다.', [
+      alert("성공", "프로필이 업데이트되었습니다.", [
         {
           text: '확인',
           onPress: () => router.back()
         }
       ]);
     } catch (error) {
-      Alert.alert('오류', '프로필 업데이트에 실패했습니다.');
+      alert("오류", "프로필 업데이트에 실패했습니다.");
     }
   };
 

@@ -9,6 +9,7 @@ import axios from 'axios';
 import { authAPI } from "@/utils/api";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useAlert } from '@/context/alert';
 
 export default function SignupScreen() {
     const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export default function SignupScreen() {
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const router = useRouter();
     const { login } = useAuth();
+    const { alert } = useAlert();
 
     const nameRef = useRef<TextInput>(null);
     const emailRef = useRef<TextInput>(null);
@@ -28,7 +30,7 @@ export default function SignupScreen() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         
         if (status !== 'granted') {
-            Alert.alert('권한 필요', '사진 라이브러리 접근 권한이 필요합니다.');
+            alert('권한 필요', '사진 라이브러리 접근 권한이 필요합니다.');
             return;
         }
 
@@ -49,24 +51,46 @@ export default function SignupScreen() {
         return emailRegex.test(email);
     };
 
+    const validateName = (name: string) => {
+        if (name.length > 10) {
+            return { isValid: false, message: '이름은 10자 이하여야 합니다.' };
+        }
+
+        const nameRegex = /^[가-힣a-zA-Z0-9_.-]+$/;
+        if (!nameRegex.test(name)) {
+            return { 
+                isValid: false, 
+                message: '이름에는 한글, 영문, 숫자, 그리고 (_.-) 특수문자만 사용할 수 있습니다.' 
+            };
+        }
+
+        return { isValid: true, message: '' };
+    };
+
     const handleSignup = async () => {
         if (!email || !password || !confirmPassword || !name || !profileImage) {
-            Alert.alert("오류", "모든 필드를 입력해주세요.");
+            alert("오류", "모든 필드를 입력해주세요.");
+            return;
+        }
+
+        const nameValidation = validateName(name);
+        if (!nameValidation.isValid) {
+            alert("오류", nameValidation.message);
             return;
         }
 
         if (!validateEmail(email)) {
-            Alert.alert("오류", "올바른 이메일 형식이 아닙니다.");
+            alert("오류", "올바른 이메일 형식이 아닙니다.");
             return;
         }
 
         if (password.length < 6) {
-            Alert.alert("오류", "비밀번호는 최소 6자 이상이어야 합니다.");
+            alert("오류", "비밀번호는 최소 6자 이상이어야 합니다.");
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert("오류", "비밀번호가 일치하지 않습니다.");
+            alert("오류", "비밀번호가 일치하지 않습니다.");
             return;
         }
 
@@ -85,9 +109,10 @@ export default function SignupScreen() {
 
             const response = await authAPI.signup(formData);
 
-            Alert.alert("성공", response.data.message, [
+            alert("성공", response.data.message, [
                 {
                     text: "확인",
+                    style: 'confirm',
                     onPress: () => {
                         login(response.data.id);
                         router.replace("/home");
@@ -97,10 +122,16 @@ export default function SignupScreen() {
 
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
-                Alert.alert("오류", error.response.data.message);
+                alert("오류", error.response.data.message);
             } else {
-                Alert.alert("오류", "회원가입 중 오류가 발생했습니다.");
+                alert("오류", "회원가입 중 오류가 발생했습니다.");
             }
+        }
+    };
+
+    const handleNameChange = (text: string) => {
+        if (text.length <= 10) {
+            setName(text);
         }
     };
 
@@ -126,13 +157,14 @@ export default function SignupScreen() {
                 <TextInput 
                     ref={nameRef}
                     style={styles.input}
-                    placeholder="이름"
+                    placeholder="이름 (10자 이하)"
                     placeholderTextColor={Colors.light.icon}
                     value={name}
-                    onChangeText={setName}
+                    onChangeText={handleNameChange}
                     returnKeyType="next"
                     onSubmitEditing={() => emailRef.current?.focus()}
                     blurOnSubmit={false}
+                    maxLength={10}
                 />
 
                 <TextInput 

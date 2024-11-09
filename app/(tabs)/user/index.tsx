@@ -13,6 +13,7 @@ import { UserInfo } from '@/interfaces/interface'
 import FollowModal from '@/components/FollowModal';
 import { API_DOMAIN } from '@/config/api';
 import ProfileSection from '@/components/ProfileSection';
+import { useAlert } from '@/context/alert';
 
 export default function MyPageScreen() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function MyPageScreen() {
   const [following, setFollowing] = useState([]);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-
+  const { alert } = useAlert();
   const fetchUserInfo = async () => {
     if (!userId) return;
 
@@ -39,7 +40,7 @@ export default function MyPageScreen() {
       setUserInfo(response.data.user);
     } catch (error) {
       console.error('사용자 정보 로딩 실패:', error);
-      Alert.alert('오류', '사용자 정보를 불러오는데 실패했습니다.');
+      alert('오류', '사용자 정보를 불러오는데 실패했습니다.');
     }
   };
 

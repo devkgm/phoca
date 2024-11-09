@@ -59,14 +59,14 @@ const Calendar = ({ onSelectDate, refresh }: CalendarProps) => {
   const handleMonthChange = (delta: number) => {
     const newDate = delta > 0 ? addMonths(selectedDate, 1) : subMonths(selectedDate, 1);
     if (!isFuture(startOfMonth(newDate))) {
-      const targetDate = delta > 0 ? 
-        endOfMonth(newDate) : 
-        new Date(newDate.getFullYear(), newDate.getMonth(), selectedDate.getDate());
+      const lastDayOfMonth = endOfMonth(newDate);
       
-      if (isFuture(targetDate)) {
+      if (isFuture(lastDayOfMonth)) {
         setSelectedDate(new Date());
+        onSelectDate(new Date());
       } else {
-        setSelectedDate(targetDate);
+        setSelectedDate(lastDayOfMonth);
+        onSelectDate(lastDayOfMonth);
       }
     }
   };

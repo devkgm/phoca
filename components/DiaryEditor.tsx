@@ -13,11 +13,12 @@ import ImageViewer from './ImageViewer';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {Diary, DayImage} from '@/interfaces/interface';
+import { useAlert } from '@/context/alert';
 
 interface DiaryEditorProps {
   selectedDate: Date;
   onSave?: () => void;
-  setRefresh?: (value: number) => void;
+  setRefresh?: React.Dispatch<React.SetStateAction<number>>;
   readOnly?: boolean;
   userId?: string;
 }
@@ -26,25 +27,40 @@ interface DiaryEditorProps {
 export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryEditorProps) {
   const [content, setContent] = useState('');
   const { userId } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [isShared, setIsShared] = useState(false);
   const [diary, setDiary] = useState<Diary | null>(null);
   const [dayImages, setDayImages] = useState<DayImage[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
+  const [isContentChanged, setIsContentChanged] = useState(false);
+  const { alert } = useAlert();
   useEffect(() => {
     fetchDiary();
     checkSharedStatus();
+    setIsContentChanged(false);
   }, [selectedDate]);
   const handleDeleteImage = async (imageId: string) => {
     try {
       await imageAPI.deleteImage(imageId);
       setDayImages(prev => prev.filter(img => img._id !== imageId));
-      setRefresh((prev: number) => prev + 1);
+      if (setRefresh) {
+        setRefresh(prev => prev + 1);
+      }
     } catch (error) {
-      Alert.alert('오류', '이미지 삭제에 실패했습니다.');
+      alert('오류', '이미지 삭제에 실패했습니다.');
     }
   };
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<DayImage>) => {
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<DayImage | 'add'>) => {
+    if (item === 'add') {
+      return (
+        <TouchableOpacity 
+          style={styles.addImageButton}
+          onPress={handleAddImages}
+        >
+          <Ionicons name="add-circle-outline" size={40} color={Colors.light.tint} />
+        </TouchableOpacity>
+      );
+    }
+
     return (
       <View style={[styles.imageSlideContainer, isActive && styles.activeImage]}>
         <TouchableOpacity 
@@ -56,12 +72,14 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
             style={styles.galleryImage}
           />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleDeleteImage(item._id)}
-        >
-          <Ionicons name="close-circle" size={24} color="red" />
-        </TouchableOpacity>
+        {isContentChanged && (
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => handleDeleteImage(item._id)}
+          >
+            <Ionicons name="close-circle" size={24} color="red" />
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -91,6 +109,7 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
         setDiary(null);
         setDayImages([]);
       }
+      setIsContentChanged(false);
     } catch (error) {
       console.error('다이어리 로딩 실패:', error);
     }
@@ -122,10 +141,19 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
         const response = await imageAPI.uploadImages(formData);
         const newImages = response.data.images;
         setDayImages([...dayImages, ...newImages]);
-        setRefresh((prev: number) => prev + 1);
+        if (setRefresh) {
+          setRefresh(prev => prev + 1);
+        }
       } catch (error) {
-        Alert.alert('오류', '이미지 업로드에 실패했습니다.');
+        alert('오류', '이미지 업로드에 실패했습니다.');
       }
+    }
+  };
+  const handleContentChange = (text: string) => {
+    setContent(text);
+    if (diary && text !== diary?.content) {
+      console.log(text, diary?.content)
+      setIsContentChanged(true);
     }
   };
   const handleSave = async () => {
@@ -139,22 +167,21 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
         content
       });
 
-      Alert.alert('성공', '다이어리가 저장되었습니다.');
-      setIsEditing(false);
+      alert('성공', '다이어리가 저장되었습니다.');
+      setIsContentChanged(false);
       onSave?.();
     } catch (error) {
-      Alert.alert('오류', '다이어리 저장에 실패했습니다.');
+      alert('오류', '다이어리 저장에 실패했습니다.');
     }
   };
   const toggleShareDiary = async () => {
     if (!selectedDate || !userId) return;
 
     if (!content.trim() && diary?.images.length === 0) {
-      Alert.alert(
+      alert(
         '알림', 
         '다이어리에 내용을 작성하거나 이미지를 추가한 후에 공유할 수 있습니다.',
-        [{ text: '확인' }]
-      );
+      );  
       return;
     }
 
@@ -168,11 +195,11 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
 
       if (response.status === 200) {
         setIsShared(!isShared);
-        Alert.alert('성공', `다이어리가 ${!isShared ? '공유' : '비공유'}되었습니다.`);
+        alert('성공', `다이어리가 ${!isShared ? '공유' : '비공유'}되었습니다.`);
       }
     } catch (error) {
       console.error('다이어리 공유 상태 변경 실패:', error);
-      Alert.alert('오류', '다이어리 공유 상태 변경에 실패했습니다.');
+      alert('오류', '다이어리 공유 상태 변경에 실패했습니다.');
     }
   };
   return (
@@ -182,19 +209,13 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
           다이어리
         </ThemedText>
         <View style={styles.galleryHeader}>
-          <TouchableOpacity 
-                  style={styles.addButton}
-                  onPress={handleAddImages}
-                >
-            <Ionicons name="add-circle-outline" size={24} color={Colors.light.tint} />
-          </TouchableOpacity>
-          {!isEditing ? (
-            <TouchableOpacity onPress={() => setIsEditing(true)}>
-              <ThemedText style={styles.editButton}>수정</ThemedText>
-            </TouchableOpacity>
-          ) : (
+          {isContentChanged ? (
             <TouchableOpacity onPress={handleSave}>
               <ThemedText style={styles.saveButton}>저장</ThemedText>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setIsContentChanged(true)}>
+              <ThemedText style={styles.editButton}>수정</ThemedText>
             </TouchableOpacity>
           )}
           <TouchableOpacity 
@@ -223,31 +244,28 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
       </View>
 
       <TextInput
-        style={[styles.input, !isEditing && styles.disabledInput]}
+        style={styles.input}
         value={content}
-        onChangeText={setContent}
+        onChangeText={handleContentChange}
         placeholder="오늘 하루는 어땠나요?"
         multiline
         numberOfLines={4}
-        editable={isEditing}
       />
-      {selectedDate &&
-        dayImages.length > 0 &&
-      (
-          <View style={styles.gallerySection}>
-            <View style={styles.galleryHeader}>
-            </View>
-            <DraggableFlatList
-              data={dayImages}
-              renderItem={renderItem}
-              keyExtractor={(item) => item._id}
-              horizontal
-              onDragEnd={({ data }) => setDayImages(data)}
-              showsHorizontalScrollIndicator={false}
-            />
+      {selectedDate && (
+        <View style={styles.gallerySection}>
+          <View style={styles.galleryHeader}>
           </View>
-        )}
-        {selectedImageIndex !== -1 && dayImages.length > 0 && (
+          <DraggableFlatList
+            data={[...dayImages, 'add' as const]}
+            renderItem={renderItem}
+            keyExtractor={(item) => (item === 'add' ? 'add-button' : item._id)}
+            horizontal
+            onDragEnd={({ data }) => setDayImages(data.filter((item): item is DayImage => item !== 'add'))}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+      )}
+      {selectedImageIndex !== -1 && dayImages.length > 0 && (
         <ImageViewer
           isVisible={selectedImageIndex !== -1}
           images={dayImages}
@@ -290,10 +308,6 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
     marginBottom: 10,
-  },
-  disabledInput: {
-    backgroundColor: '#f5f5f5',
-    color: '#666',
   },
   galleryHeader: {
     flexDirection: 'row',
@@ -371,5 +385,20 @@ const styles = StyleSheet.create({
   },
   activeImage: {
     opacity: 0.8,
+  },
+  imageListContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addImageButton: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: Colors.light.tint,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
 }); 

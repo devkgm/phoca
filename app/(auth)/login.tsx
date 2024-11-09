@@ -7,13 +7,14 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/auth";
 import { authAPI } from "@/utils/api";
 import axios from 'axios';
+import { useAlert } from "@/context/alert";
 
 export default function LoginScreen() {
     const router = useRouter();
     const { login } = useAuth();
     const [email, setEmail] = useState("jip0806@naver.com");
     const [password, setPassword] = useState("123456");
-    
+    const { alert } = useAlert();
     const passwordRef = useRef<TextInput>(null);
 
     useEffect(()=> {
@@ -22,7 +23,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         // 입력값 유효성 검사
         if (!email || !password) {
-            Alert.alert("오류", "이메일과 비밀번호를 모두 입력해주세요.");
+            alert("오류", "이메일과 비밀번호를 모두 입력해주세요.");
             return;
         }
 
@@ -31,7 +32,7 @@ export default function LoginScreen() {
 
             // userId를 login 함수에 전달
             login(response.data.user.id);
-            Alert.alert("성공", response.data.message, [
+            alert("성공", response.data.message, [
                 {
                     text: "확인",
                     onPress: () => router.replace("/home")
@@ -40,9 +41,9 @@ export default function LoginScreen() {
 
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
-                Alert.alert("오류", error.response.data.message);
+                alert("오류", error.response.data.message);
             } else {
-                Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+                alert("오류", "로그인 중 오류가 발생했습니다.");
             }
         }
     };

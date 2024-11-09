@@ -25,14 +25,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="upload"
         options={{
           title: '업로드',
           tabBarShowLabel: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="image-outline" color={color} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="user"
         options={{

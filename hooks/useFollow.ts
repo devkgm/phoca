@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { userAPI } from '@/utils/api';
 import { FollowUser } from '@/interfaces/interface';
 import { Alert } from 'react-native';
+import { useAlert } from '@/context/alert';
 
 export const useFollow = (currentUserId: string | null, targetUserId?: string) => {
   const [followers, setFollowers] = useState<FollowUser[]>([]);
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
-
+  const { alert } = useAlert();
   const fetchFollowInfo = async () => {
     if (!currentUserId) return;
     
@@ -56,7 +57,7 @@ export const useFollow = (currentUserId: string | null, targetUserId?: string) =
       fetchFollowInfo(); // 팔로우 정보 새로고침
     } catch (error) {
       console.error('팔로우 작업 실패:', error);
-      Alert.alert('오류', '작업을 완료할 수 없습니다.');
+      alert('오류', '작업을 완료할 수 없습니다.');
     }
   };
 
