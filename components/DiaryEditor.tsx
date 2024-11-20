@@ -150,11 +150,10 @@ export default function DiaryEditor({ onSave, selectedDate, setRefresh }: DiaryE
     }
   };
   const handleContentChange = (text: string) => {
-    setContent(text);
-    if (diary && text !== diary?.content) {
-      console.log(text, diary?.content)
+    if (text !== content) {
       setIsContentChanged(true);
     }
+    setContent(text);
   };
   const handleSave = async () => {
     if (!userId) return;
