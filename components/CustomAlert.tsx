@@ -73,7 +73,7 @@ export default function CustomAlert({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(191, 148, 228, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -82,6 +82,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 14,
     overflow: 'hidden',
+    shadowColor: "#BF94E4",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   contentContainer: {
     padding: 20,
@@ -92,6 +100,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 10,
     textAlign: 'center',
+    color: Colors.light.tint,
   },
   message: {
     fontSize: 15,
@@ -101,7 +110,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     borderTopWidth: 0.5,
-    borderTopColor: '#ccc',
+    borderTopColor: '#E8DFF5',
     flexDirection: 'row',
   },
   button: {
@@ -113,7 +122,7 @@ const styles = StyleSheet.create({
   },
   buttonBorder: {
     borderRightWidth: 0.5,
-    borderRightColor: '#ccc',
+    borderRightColor: '#E8DFF5',
   },
   buttonText: {
     fontSize: 16,
@@ -121,13 +130,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cancelButton: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#F9F6FC',
   },
   cancelText: {
-    color: '#666',
+    color: '#8E7399',
   },
   confirmButton: {
-    backgroundColor: Colors.light.tint + '10',
+    backgroundColor: Colors.light.tint + '15',
   },
   confirmText: {
     color: Colors.light.tint,
