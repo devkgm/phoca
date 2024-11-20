@@ -1,7 +1,8 @@
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
 export default function HomeLayout() {
+
   return (
     <Stack>
       <Stack.Screen

@@ -8,6 +8,7 @@ import {SharedPost} from "@/interfaces/interface";
 import { useAuth } from '@/context/auth';
 import { Like } from '@/interfaces/interface';
 import { Comment } from '@/interfaces/interface';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function HomeScreen() {
   const { userId } = useAuth();
@@ -15,12 +16,15 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  useEffect(() => {
+      fetchSharedPosts(selectedDate);
+  }, []);
+
   const fetchSharedPosts = async (date: Date) => {
     try {
       const response = await diaryAPI.getSharedPosts();
       const allPosts = response.data.posts;
       
-      // 선택된 날짜와 같은 날의 게시물만 필터링
       const filteredPosts = allPosts.filter((post: SharedPost) => {
         const postDate = new Date(post.date);
         return (
@@ -66,10 +70,6 @@ export default function HomeScreen() {
       )
     );
   };
-
-  useEffect(() => {
-    fetchSharedPosts(selectedDate);
-  }, []);
 
   return (
     <View style={styles.container}>

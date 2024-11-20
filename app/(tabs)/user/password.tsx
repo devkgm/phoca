@@ -9,6 +9,12 @@ import { useAuth } from '@/context/auth';
 import { userAPI } from '@/utils/api';
 import { useState } from 'react';
 
+const validatePassword = (password: string) => {
+  // 최소 8자, 영문 대소문자, 숫자, 특수문자 포함
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+  return passwordRegex.test(password);
+};
+
 export default function PasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -22,8 +28,15 @@ export default function PasswordScreen() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      alert('오류', '새 비밀번호는 6자 이상이어야 합니다.');
+    if (!validatePassword(newPassword)) {
+      alert('오류', 
+        '새 비밀번호는 다음 조건을 만족해야 합니다:\n' +
+        '• 최소 8자 이상\n' +
+        '• 영문 대문자 1개 이상\n' +
+        '• 영문 소문자 1개 이상\n' +
+        '• 숫자 1개 이상\n' +
+        '• 특수문자 1개 이상 (@$!%*?&#)'
+      );
       return;
     }
 

@@ -67,6 +67,11 @@ export default function SignupScreen() {
         return { isValid: true, message: '' };
     };
 
+    const validatePassword = (password: string) => {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+        return passwordRegex.test(password);
+    };
+
     const handleSignup = async () => {
         if (!email || !password || !confirmPassword || !name || !profileImage) {
             alert("오류", "모든 필드를 입력해주세요.");
@@ -84,8 +89,15 @@ export default function SignupScreen() {
             return;
         }
 
-        if (password.length < 6) {
-            alert("오류", "비밀번호는 최소 6자 이상이어야 합니다.");
+        if (!validatePassword(password)) {
+            alert("오류", 
+                '비밀번호는 다음 조건을 만족해야 합니다:\n' +
+                '• 최소 8자 이상\n' +
+                '• 영문 대문자 1개 이상\n' +
+                '• 영문 소문자 1개 이상\n' +
+                '• 숫자 1개 이상\n' +
+                '• 특수문자 1개 이상 (@$!%*?&#)'
+            );
             return;
         }
 
@@ -138,11 +150,22 @@ export default function SignupScreen() {
     return (
         <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1 }}
+            style={{flex: 1, backgroundColor: Colors.light.background}}
         >
+      <View style={styles.header}>
+      <TouchableOpacity 
+          style={styles.headerButton} 
+          onPress={() => router.back()}
+        >
+          <ThemedText>취소</ThemedText>
+        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+          <ThemedText style={styles.headerTitle}>회원가입</ThemedText>
+        </View>
+        <View style={styles.headerButton}>
+        </View>
+      </View>
             <ScrollView contentContainerStyle={styles.container}>
-                <ThemedText style={styles.title}>회원가입</ThemedText>
-                
                 <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
                     {profileImage ? (
                         <Image source={{ uri: profileImage }} style={styles.profileImage} />
@@ -232,6 +255,24 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 20,
     },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+      },
+      headerButton: {
+        width: 50,
+      },
+      headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+      },
+      headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+      },
     title: {
         fontSize: 24,
         marginBottom: 30,

@@ -1,8 +1,10 @@
 import { Tabs, useRouter } from "expo-router";
 import TabBarIcon from "@/components/navigation/TabBarIcon";
+import { useState } from "react";
 
 export default function TabLayout() {
   const router = useRouter();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <Tabs
@@ -20,12 +22,20 @@ export default function TabLayout() {
       }}
       screenListeners={({ navigation, route }) => ({
         tabPress: (e) => {
-          e.preventDefault();
-          // 현재 활성화된 탭을 다시 누르면 해당 탭의 첫 화면으로 이동
+          // 현재 활성화된 탭을 다시 누를 때의 동작
           if (navigation.isFocused()) {
-            router.replace(`/(tabs)/${route.name}`);
+            if (route.name === 'home') {
+              // 홈 탭은 새로고침
+              e.preventDefault();
+              console.log('refreshKey', refreshKey);
+              setRefreshKey(prev => prev + 1);
+            } else if (route.name === 'user') {
+              // 프로필 탭은 아무 동작 하지 않음
+              e.preventDefault();
+            }
           } else {
-            // 다른 탭으로 이동할 때도 해당 탭의 첫 화면으로 이동
+            // 다른 탭으로 이동할 때는 해당 탭의 첫 화면으로 이동
+            e.preventDefault();
             router.replace(`/(tabs)/${route.name}`);
           }
         },

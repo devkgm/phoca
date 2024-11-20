@@ -7,7 +7,7 @@ export default function AuthLayout() {
             <Stack.Screen 
                 name="signup" 
                 options={{
-                    headerShown: true,
+                    headerShown: false,
                     headerTitle: "",
                     headerStyle: {
                         backgroundColor: 'transparent',
