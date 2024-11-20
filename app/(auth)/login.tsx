@@ -51,10 +51,13 @@ export default function LoginScreen() {
     return (
         <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: Colors.light.background }}
         >
             <ScrollView contentContainerStyle={styles.container}>
-                <ThemedText style={styles.title}>로그인</ThemedText>
+                <View style={styles.logoContainer}>
+                    <ThemedText style={styles.subText}>내 손안에 포토 캘린더</ThemedText>
+                    <ThemedText style={styles.logoText}>Phoca</ThemedText>
+                </View>
                 
                 <TextInput 
                     style={styles.input}
@@ -107,9 +110,20 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 20,
     },
-    title: {
-        fontSize: 24,
-        marginBottom: 30,
+    logoContainer: {
+        alignItems: 'center',
+        marginBottom: 50,
+    },
+    logoText: {
+        fontSize: 48,
+        fontWeight: 'bold',
+        color: Colors.light.tint,
+        marginBottom: 10,
+        lineHeight: 48,
+    },
+    subText: {
+        fontSize: 16,
+        color: Colors.light.icon,
     },
     input: {
         width: "100%",
