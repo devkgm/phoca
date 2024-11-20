@@ -26,6 +26,9 @@ export const userAPI = {
                 'Content-Type': 'multipart/form-data',
             },
         }),
+    deleteUser: (userId: string) => api.delete(API_URL.DELETE_USER(userId)),
+    changePassword: (userId: string, data: { currentPassword: string; newPassword: string }) => 
+        api.put(API_URL.CHANGE_PASSWORD(userId), data),
 };
 
 export const diaryAPI = {

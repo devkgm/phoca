@@ -1,4 +1,4 @@
-export const API_DOMAIN = 'http://192.168.0.43:3000';
+export const API_DOMAIN = 'http://gmkim333.iptime.org:10080';
 export const API_URL = {
     LOGIN: `${API_DOMAIN}/api/login`,
     SIGNUP: `${API_DOMAIN}/api/signup`,
@@ -25,4 +25,6 @@ export const API_URL = {
     ADD_COMMENT: (diaryId: string) => `${API_DOMAIN}/api/diary/${diaryId}/comment`,
     DELETE_COMMENT: (commentId: string) => `${API_DOMAIN}/api/diary/comment/${commentId}`,
     GET_SOCIAL_INFO: (diaryId: string) => `${API_DOMAIN}/api/diary/${diaryId}/social`,
+    DELETE_USER: (userId: string) => `${API_DOMAIN}/api/user/${userId}`,
+    CHANGE_PASSWORD: (userId: string) => `${API_DOMAIN}/api/user/${userId}/password`,
 }; 

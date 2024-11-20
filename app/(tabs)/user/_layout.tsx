@@ -20,8 +20,27 @@ export default function UserLayout() {
             <Stack.Screen
                 name="profile"
                 options={{
-                headerBackTitle: '뒤로',
-                headerTintColor: Colors.light.tint,
+                    headerBackTitle: '뒤로',
+                    headerTintColor: Colors.light.tint,
+                    headerShadowVisible: false
+                }}
+            />
+            <Stack.Screen
+                name="setting"
+                options={{
+                    headerShown: false, 
+                    headerBackTitle: '뒤로',
+                    headerTintColor: Colors.light.tint,
+                    headerShadowVisible: false
+                }}
+            />
+            <Stack.Screen
+                name="password"
+                options={{
+                    headerShown: false, 
+                    headerBackTitle: '뒤로',
+                    headerTintColor: Colors.light.tint,
+                    headerShadowVisible: false
                 }}
             />
         </Stack>
