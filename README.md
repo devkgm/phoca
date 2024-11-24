@@ -1,50 +1,81 @@
-# Welcome to your Expo app 👋
+# Phoca - 포토 캘린더 📸
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Phoca는 일상의 순간들을 사진과 글을 기록하고 공유할 수 있는 포토 다이어리 앱입니다.
 
-## Get started
+## 📱 다운로드
+[![App Store](https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white)](https://apps.apple.com/kr/app/phoca-포토-캘린더/6738384565)
 
-1. Install dependencies
+## 주요 기능
 
-    ```bash
-    npm install
-    ```
+### 📅 캘린더 기반 다이어리
+- 날짜별로 사진과 글을 기록
+- 직관적인 캘린더 UI로 쉽게 과거 기록 확인
+- 이미지가 있는 날짜는 아이콘으로 표시
 
-2. Start the app
+### 🖼️ 이미지 관리
+- 다중 이미지 업로드 지원
+- 드래그 앤 드롭으로 이미지 순서 변경
+- 이미지 뷰어로 편리한 확인
 
-    ```bash
-     npx expo start
-    ```
+### 🤝 소셜 기능
+- 원하는 날짜의 다이어리를 선택적으로 공유
+- 다른 사용자의 공유된 다이어리 확인
+- 좋아요와 댓글로 소통
 
-In the output, you'll find options to open the app in a
+### 👤 계정 관리
+- 이메일 회원가입/로그인
+- 구글 소셜 로그인 지원
+- 프로필 이미지 설정
 
--   [development build](https://docs.expo.dev/develop/development-builds/introduction/)
--   [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
--   [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
--   [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 스크린샷
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 로그인 & 회원가입
+<p align="center">
+  <table>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/77a2821d-75dd-4b50-b2fd-21411527a047" width="250" alt="로그인"></td>
+      <td width="30"></td>
+      <td><img src="https://github.com/user-attachments/assets/9293cd0f-8a54-49c8-8daf-92640ad5d87e" width="250" alt="회원가입"></td>
+    </tr>
+  </table>
+</p>
 
-## Get a fresh project
+### 메인 기능
+<p align="center">
+  <table>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/d8376c39-76d9-4d09-bcdf-9aa9cca1a2cb" width="250" alt="캘린더"></td>
+      <td width="30"></td>
+      <td><img src="https://github.com/user-attachments/assets/02254be7-1fe1-4890-8625-e74f61a1dd3e" width="250" alt="다이어리"></td>
+    </tr>
+  </table>
+</p>
 
-When you're ready, run:
+### 프로필 & 설정
+<p align="center">
+  <table>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/d43bd860-a40a-4756-93f4-39f957aabefb" width="250" alt="프로필"></td>
+      <td width="30"></td>
+      <td><img src="https://github.com/user-attachments/assets/1c4e5c5d-2154-47cf-947b-588315ba90df" width="250" alt="설정"></td>
+    </tr>
+  </table>
+</p>
 
-```bash
-npm run reset-project
-```
+## 기술 스택
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Frontend
+- React Native
+- Expo
+- TypeScript
+- expo-router (파일 기반 라우팅)
 
-## Learn more
+### Backend
+- Node.js
+- Express
+- MongoDB
+- Multer (이미지 업로드)
 
-To learn more about developing your project with Expo, look at the following resources:
-
--   [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
--   [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
--   [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
--   [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 인증
+- JWT
+- Google OAuth
