@@ -1,6 +1,5 @@
 import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { useEffect, useState, useRef } from "react";
@@ -12,8 +11,8 @@ import { useAlert } from "@/context/alert";
 export default function LoginScreen() {
     const router = useRouter();
     const { login } = useAuth();
-    const [email, setEmail] = useState("jip0806@naver.com");
-    const [password, setPassword] = useState("123456");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const { alert } = useAlert();
     const passwordRef = useRef<TextInput>(null);
 

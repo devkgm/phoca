@@ -16,6 +16,28 @@ export default function SettingScreen() {
     router.push('/(tabs)/user/password');
   };
 
+  const handleLogout = () => {
+    alert(
+      '로그아웃',
+      '로그아웃 하시겠습니까?',
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+          onPress: () => {},
+        },
+        {
+          text: '로그아웃',
+          style: 'confirm',
+          onPress: async () => {
+            await logout();
+            router.replace('/');
+          },
+        },
+      ]
+    );
+  };
+
   const handleDeleteAccount = () => {
     alert(
       '회원 탈퇴',
@@ -24,7 +46,7 @@ export default function SettingScreen() {
         {
           text: '취소',
           style: 'cancel',
-          onPress: () => {},
+          onPress: ()=>{}
         },
         {
           text: '탈퇴',
@@ -62,8 +84,7 @@ export default function SettingScreen() {
         <View style={styles.headerTitleContainer}>
           <ThemedText style={styles.headerTitle}>설정</ThemedText>
         </View>
-        <View style={styles.headerButton}>
-        </View>
+        <View style={styles.headerButton} />
       </View>
       
       <View style={styles.section}>
@@ -72,6 +93,13 @@ export default function SettingScreen() {
           onPress={handlePasswordChange}
         >
           <ThemedText>비밀번호 변경</ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={handleLogout}
+        >
+          <ThemedText style={styles.logoutText}>로그아웃</ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -115,6 +143,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  logoutText: {
+    color: Colors.light.tint,
+    textAlign: 'center',
   },
   deleteAccount: {
     marginTop: 30,
