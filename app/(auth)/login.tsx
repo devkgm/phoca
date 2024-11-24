@@ -1,4 +1,4 @@
-import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Image } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
@@ -7,6 +7,11 @@ import { useAuth } from "@/context/auth";
 import { authAPI } from "@/utils/api";
 import axios from 'axios';
 import { useAlert } from "@/context/alert";
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { GOOGLE_AUTH } from '@/config/auth';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -15,10 +20,51 @@ export default function LoginScreen() {
     const [password, setPassword] = useState("");
     const { alert } = useAlert();
     const passwordRef = useRef<TextInput>(null);
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+        // androidClientId: GOOGLE_AUTH.ANDROID_CLIENT_ID,
+    });
 
     useEffect(()=> {
     // router.replace("/home")
     })
+
+    useEffect(() => {
+        handleGoogleResponse();
+    }, [response]);
+
+    const handleGoogleResponse = async () => {
+        if (response?.type === 'success') {
+            const { authentication } = response;
+            
+            try {
+                const userInfoResponse = await fetch(
+                    'https://www.googleapis.com/userinfo/v2/me',
+                    {
+                        headers: { Authorization: `Bearer ${authentication.accessToken}` },
+                    }
+                );
+                const userInfo = await userInfoResponse.json();
+                const googleLoginResponse = await authAPI.googleLogin({
+                    email: userInfo.email,
+                    name: userInfo.name
+                });
+
+                login(googleLoginResponse.data.user.id);
+                alert("성공", "구글 로그인 성공", [
+                    {
+                        text: "확인",
+                        onPress: () => router.replace("/home")
+                    }
+                ]);
+            } catch (error) {
+                console.log(error);
+                alert("오류", "구글 로그인 중 오류가 발생했습니다.");
+            }
+        }
+    };
+
     const handleLogin = async () => {
         // 입력값 유효성 검사
         if (!email || !password) {
@@ -97,6 +143,24 @@ export default function LoginScreen() {
                 >
                     <Text style={styles.signupButtonText}>회원가입</Text>
                 </TouchableOpacity>
+
+                <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <ThemedText style={styles.dividerText}>또는</ThemedText>
+                    <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={() => promptAsync()}
+                    disabled={!request}
+                >
+                    <Image 
+                        source={require('@/assets/images/google-logo.webp')} 
+                        style={styles.googleIcon}
+                    />
+                    <Text style={styles.googleButtonText}>Google로 계속하기</Text>
+                </TouchableOpacity>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -161,5 +225,40 @@ const styles = StyleSheet.create({
         color: Colors.light.tint,
         fontSize: 16,
         fontWeight: "bold",
+    },
+    divider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#eee',
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        color: '#999',
+    },
+    googleButton: {
+        width: "100%",
+        height: 50,
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        flexDirection: 'row',
+        justifyContent: "center",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    googleIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 10,
+    },
+    googleButtonText: {
+        color: "#333",
+        fontSize: 16,
+        fontWeight: "500",
     },
 });

@@ -63,6 +63,8 @@ export const authAPI = {
                 'Content-Type': 'multipart/form-data',
             },
         }),
+    googleLogin: (data: { email: string; name: string }) => 
+        api.post(API_URL.GOOGLE_LOGIN, data),
 };
 
 export const socialAPI = {

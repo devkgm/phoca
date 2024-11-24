@@ -20,3 +20,7 @@ expo-env.d.ts
 # @end expo-cli
 server
 .idea
+android
+ios
+.env
+app.json

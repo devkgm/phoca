@@ -1,4 +1,4 @@
-export const API_DOMAIN = 'http://gmkim333.iptime.org:10080';
+export const API_DOMAIN = process.env.EXPO_PUBLIC_API_DOMAIN;
 export const API_URL = {
     LOGIN: `${API_DOMAIN}/api/login`,
     SIGNUP: `${API_DOMAIN}/api/signup`,
@@ -27,4 +27,5 @@ export const API_URL = {
     GET_SOCIAL_INFO: (diaryId: string) => `${API_DOMAIN}/api/diary/${diaryId}/social`,
     DELETE_USER: (userId: string) => `${API_DOMAIN}/api/user/${userId}`,
     CHANGE_PASSWORD: (userId: string) => `${API_DOMAIN}/api/user/${userId}/password`,
+    GOOGLE_LOGIN: `${API_DOMAIN}/api/google-login`,
 }; 
